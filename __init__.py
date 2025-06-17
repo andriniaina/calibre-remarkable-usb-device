@@ -313,18 +313,16 @@ class RemarkableUsbDevice(DeviceConfig, DevicePlugin):
             return RemarkableBookList(), None, None
 
         booklist0, _, _ = booklists
-        try:
-            tree = rm_web_interface.query_tree(settings.IP, "")
-            existing_docs = tree.ls_recursive() + tree.ls_uuid()
-            LOGGER.debug(f"{existing_docs=}")
-            LOGGER.info("Attempting to open existing calibre metadata on device")
-            bookslist = self.load_booklist(settings)
+        tree = rm_web_interface.query_tree(settings.IP, "")
+        existing_docs = tree.ls_recursive() + tree.ls_uuid()
+        LOGGER.debug(f"{existing_docs=}")
+        LOGGER.info("Attempting to open existing calibre metadata on device")
+        bookslist = self.load_booklist(settings)
+        if existing_docs:
             booklist_on_device = [b for b in bookslist if b.path in existing_docs or b.rm_uuid in existing_docs]
-            LOGGER.info("got booklist_on_device=%s", booklist_on_device)
-        except:  # noqa: E722
-            LOGGER.warning("Unable to get metadata", exc_info=True)
-            rm_ssh.init_metadata(settings)
-            booklist_on_device = []
+        else:
+            booklist_on_device = bookslist
+        LOGGER.info("got booklist_on_device=%s", booklist_on_device)
 
         # TOOD optimize this, maybe somehow hash RemarkableBookList
         for book in booklist0:
